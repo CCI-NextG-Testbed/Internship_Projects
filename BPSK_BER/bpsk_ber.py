@@ -471,6 +471,47 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
 
         self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_freq_sink_x_0_win)
+        self.qtgui_const_sink_x_0_0_0_0_0_0 = qtgui.const_sink_c(
+            1024, #size
+            "RX Const", #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_const_sink_x_0_0_0_0_0_0.set_update_time(0.10)
+        self.qtgui_const_sink_x_0_0_0_0_0_0.set_y_axis((-2), 2)
+        self.qtgui_const_sink_x_0_0_0_0_0_0.set_x_axis((-2), 2)
+        self.qtgui_const_sink_x_0_0_0_0_0_0.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, "")
+        self.qtgui_const_sink_x_0_0_0_0_0_0.enable_autoscale(False)
+        self.qtgui_const_sink_x_0_0_0_0_0_0.enable_grid(False)
+        self.qtgui_const_sink_x_0_0_0_0_0_0.enable_axis_labels(True)
+
+
+        labels = ['', '', '', '', '',
+            '', '', '', '', '']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ["blue", "red", "green", "black", "cyan",
+            "magenta", "yellow", "dark red", "dark green", "dark blue"]
+        styles = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
+        markers = [0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+
+        for i in range(1):
+            if len(labels[i]) == 0:
+                self.qtgui_const_sink_x_0_0_0_0_0_0.set_line_label(i, "Data {0}".format(i))
+            else:
+                self.qtgui_const_sink_x_0_0_0_0_0_0.set_line_label(i, labels[i])
+            self.qtgui_const_sink_x_0_0_0_0_0_0.set_line_width(i, widths[i])
+            self.qtgui_const_sink_x_0_0_0_0_0_0.set_line_color(i, colors[i])
+            self.qtgui_const_sink_x_0_0_0_0_0_0.set_line_style(i, styles[i])
+            self.qtgui_const_sink_x_0_0_0_0_0_0.set_line_marker(i, markers[i])
+            self.qtgui_const_sink_x_0_0_0_0_0_0.set_line_alpha(i, alphas[i])
+
+        self._qtgui_const_sink_x_0_0_0_0_0_0_win = sip.wrapinstance(self.qtgui_const_sink_x_0_0_0_0_0_0.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_const_sink_x_0_0_0_0_0_0_win)
         self.qtgui_const_sink_x_0_0_0_0 = qtgui.const_sink_c(
             1024, #size
             "TX Const", #name
@@ -515,7 +556,7 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
         self.fec_ber_bf_0 = fec.ber_bf(False, 100, -7.0)
         self.epy_block_0 = epy_block_0.blk()
         self.digital_symbol_sync_xx_0_0 = digital.symbol_sync_cc(
-            digital.TED_GARDNER,
+            digital.TED_MUELLER_AND_MULLER,
             sps,
             0.045,
             1.0,
@@ -527,7 +568,7 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
             128,
             [])
         self.digital_symbol_sync_xx_0 = digital.symbol_sync_cc(
-            digital.TED_GARDNER,
+            digital.TED_MUELLER_AND_MULLER,
             sps,
             0.045,
             1.0,
@@ -540,11 +581,12 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
             [])
         self.digital_diff_encoder_bb_0 = digital.diff_encoder_bb(2, digital.DIFF_DIFFERENTIAL)
         self.digital_diff_decoder_bb_0 = digital.diff_decoder_bb(2, digital.DIFF_DIFFERENTIAL)
-        self.digital_costas_loop_cc_0 = digital.costas_loop_cc(0.05, 2, False)
+        self.digital_costas_loop_cc_0 = digital.costas_loop_cc(((2*3.141596265359)/100), 2, False)
+        self.digital_corr_est_cc_0 = digital.corr_est_cc((1, -1, 1, 1, 1, 1, 1, -1), sps, 1, 0.9, digital.THRESHOLD_ABSOLUTE)
+        self.digital_constellation_encoder_bc_0_1 = digital.constellation_encoder_bc(variable_constellation_0)
+        self.digital_constellation_encoder_bc_0_0 = digital.constellation_encoder_bc(variable_constellation_0)
+        self.digital_constellation_encoder_bc_0 = digital.constellation_encoder_bc(variable_constellation_0)
         self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(variable_constellation_0)
-        self.digital_chunks_to_symbols_xx_0_1 = digital.chunks_to_symbols_bc([-1, 1], 1)
-        self.digital_chunks_to_symbols_xx_0_0 = digital.chunks_to_symbols_bc([-1, 1], 1)
-        self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bc([-1, 1], 1)
         self.channels_channel_model_0 = channels.channel_model(
             noise_voltage=(noise_range*10**-3),
             frequency_offset=(freq_range*10**-6),
@@ -552,7 +594,9 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
             taps=[0.72 + 0.10j, 0.33 - 0.18j, 0.11 + 0.45j, 0.05 - 0.02j, 0.02 + 0.01j],
             noise_seed=0,
             block_tags=False)
-        self.blocks_vector_source_x_0 = blocks.vector_source_b((0, 1, 0, 1, 1, 0, 0, 1), True, 1, [])
+        self.blocks_vector_source_x_0_0 = blocks.vector_source_b((1, 1, 1, 0, 0, 0, 0, 1), True, 1, [])
+        self.blocks_vector_source_x_0 = blocks.vector_source_b((0, 1, 1, 0, 1, 0, 0, 1), True, 1, [])
+        self.blocks_throttle2_0_0_2 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0_1_0 = blocks.throttle( gr.sizeof_float*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0_1 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0_0_1 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
@@ -560,6 +604,7 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
         self.blocks_throttle2_0_0_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
+        self.blocks_stream_mux_0 = blocks.stream_mux(gr.sizeof_char*1, (8, 8))
         self.blocks_repeat_0_1 = blocks.repeat(gr.sizeof_char*1, sps)
         self.blocks_repeat_0_0 = blocks.repeat(gr.sizeof_char*1, sps)
         self.blocks_repeat_0 = blocks.repeat(gr.sizeof_char*1, sps)
@@ -583,9 +628,10 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_multiply_xx_0_0, 0), (self.digital_costas_loop_cc_0, 0))
         self.connect((self.blocks_repack_bits_bb_0, 0), (self.fec_ber_bf_0, 0))
         self.connect((self.blocks_repack_bits_bb_0_0, 0), (self.fec_ber_bf_0, 1))
-        self.connect((self.blocks_repeat_0, 0), (self.digital_chunks_to_symbols_xx_0, 0))
-        self.connect((self.blocks_repeat_0_0, 0), (self.digital_chunks_to_symbols_xx_0_0, 0))
-        self.connect((self.blocks_repeat_0_1, 0), (self.digital_chunks_to_symbols_xx_0_1, 0))
+        self.connect((self.blocks_repeat_0, 0), (self.digital_constellation_encoder_bc_0_1, 0))
+        self.connect((self.blocks_repeat_0_0, 0), (self.digital_constellation_encoder_bc_0_0, 0))
+        self.connect((self.blocks_repeat_0_1, 0), (self.digital_constellation_encoder_bc_0, 0))
+        self.connect((self.blocks_stream_mux_0, 0), (self.digital_diff_encoder_bb_0, 0))
         self.connect((self.blocks_throttle2_0, 0), (self.qtgui_freq_sink_x_0, 0))
         self.connect((self.blocks_throttle2_0_0, 0), (self.qtgui_freq_sink_x_0_0, 0))
         self.connect((self.blocks_throttle2_0_0, 0), (self.qtgui_time_sink_x_0_0_0, 0))
@@ -595,20 +641,24 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_throttle2_0_0_0_1, 0), (self.qtgui_const_sink_x_0_0_0_0, 0))
         self.connect((self.blocks_throttle2_0_0_1, 0), (self.qtgui_time_sink_x_0_0_0_0_0_0, 0))
         self.connect((self.blocks_throttle2_0_0_1_0, 0), (self.qtgui_number_sink_0, 0))
+        self.connect((self.blocks_throttle2_0_0_2, 0), (self.qtgui_const_sink_x_0_0_0_0_0_0, 0))
         self.connect((self.blocks_vector_source_x_0, 0), (self.blocks_repack_bits_bb_0_0, 0))
         self.connect((self.blocks_vector_source_x_0, 0), (self.blocks_repeat_0_1, 0))
-        self.connect((self.blocks_vector_source_x_0, 0), (self.digital_diff_encoder_bb_0, 0))
+        self.connect((self.blocks_vector_source_x_0, 0), (self.blocks_stream_mux_0, 1))
+        self.connect((self.blocks_vector_source_x_0_0, 0), (self.blocks_stream_mux_0, 0))
         self.connect((self.channels_channel_model_0, 0), (self.blocks_multiply_xx_0_0, 0))
         self.connect((self.channels_channel_model_0, 0), (self.blocks_throttle2_0, 0))
-        self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.root_raised_cosine_filter_0, 0))
-        self.connect((self.digital_chunks_to_symbols_xx_0_0, 0), (self.blocks_throttle2_0_0_1, 0))
-        self.connect((self.digital_chunks_to_symbols_xx_0_1, 0), (self.blocks_throttle2_0_0_0_0, 0))
         self.connect((self.digital_constellation_decoder_cb_0, 0), (self.digital_diff_decoder_bb_0, 0))
+        self.connect((self.digital_constellation_encoder_bc_0, 0), (self.blocks_throttle2_0_0_0_0, 0))
+        self.connect((self.digital_constellation_encoder_bc_0_0, 0), (self.blocks_throttle2_0_0_1, 0))
+        self.connect((self.digital_constellation_encoder_bc_0_1, 0), (self.root_raised_cosine_filter_0, 0))
+        self.connect((self.digital_corr_est_cc_0, 0), (self.digital_constellation_decoder_cb_0, 0))
         self.connect((self.digital_costas_loop_cc_0, 0), (self.blocks_throttle2_0_0, 0))
         self.connect((self.digital_costas_loop_cc_0, 0), (self.digital_symbol_sync_xx_0, 0))
         self.connect((self.digital_diff_decoder_bb_0, 0), (self.blocks_delay_0, 0))
         self.connect((self.digital_diff_encoder_bb_0, 0), (self.blocks_repeat_0, 0))
-        self.connect((self.digital_symbol_sync_xx_0, 0), (self.digital_constellation_decoder_cb_0, 0))
+        self.connect((self.digital_symbol_sync_xx_0, 0), (self.blocks_throttle2_0_0_2, 0))
+        self.connect((self.digital_symbol_sync_xx_0, 0), (self.digital_corr_est_cc_0, 0))
         self.connect((self.digital_symbol_sync_xx_0_0, 0), (self.blocks_throttle2_0_0_0_1, 0))
         self.connect((self.epy_block_0, 0), (self.blocks_throttle2_0_0_1_0, 0))
         self.connect((self.fec_ber_bf_0, 0), (self.epy_block_0, 0))
@@ -631,6 +681,9 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
     def set_variable_constellation_0(self, variable_constellation_0):
         self.variable_constellation_0 = variable_constellation_0
         self.digital_constellation_decoder_cb_0.set_constellation(self.variable_constellation_0)
+        self.digital_constellation_encoder_bc_0.set_constellation(self.variable_constellation_0)
+        self.digital_constellation_encoder_bc_0_0.set_constellation(self.variable_constellation_0)
+        self.digital_constellation_encoder_bc_0_1.set_constellation(self.variable_constellation_0)
 
     def get_sps(self):
         return self.sps
@@ -658,6 +711,7 @@ class bpsk_ber(gr.top_block, Qt.QWidget):
         self.blocks_throttle2_0_0_0_1.set_sample_rate(self.samp_rate)
         self.blocks_throttle2_0_0_1.set_sample_rate(self.samp_rate)
         self.blocks_throttle2_0_0_1_0.set_sample_rate(self.samp_rate)
+        self.blocks_throttle2_0_0_2.set_sample_rate(self.samp_rate)
         self.qtgui_freq_sink_x_0.set_frequency_range(0, self.samp_rate)
         self.qtgui_freq_sink_x_0_0.set_frequency_range(0, self.samp_rate)
         self.qtgui_freq_sink_x_0_0_0.set_frequency_range(0, self.samp_rate)
