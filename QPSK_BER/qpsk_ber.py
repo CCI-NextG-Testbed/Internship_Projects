@@ -73,12 +73,12 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         order, 1, digital.constellation.AMPLITUDE_NORMALIZATION).base()
         self.qpsk_obj.set_npwr(1.0)
         self.peamble = peamble = [1, 1, 3, 2, 0, 3, 0, 1]
-        self.variable_modulate_vector_0 = variable_modulate_vector_0 = digital.modulate_vector_bc(digital.generic_mod(qpsk_obj, False, sps, True, 0.35, False, False).to_basic_block(), peamble, [1])
+        self.variable_modulate_vector_0 = variable_modulate_vector_0 = digital.modulate_vector_bc(digital.generic_mod(qpsk_obj, True, sps, True, 0.35, False, False).to_basic_block(), peamble, [1])
         self.samp_rate = samp_rate = 32000
-        self.noise_range = noise_range = 0
+        self.noise_range = noise_range = -100
         self.freq_range = freq_range = 0
         self.epsilon = epsilon = 0
-        self.delay_blk = delay_blk = 0
+        self.delay_blk = delay_blk = 10
 
         ##################################################
         # Blocks
@@ -87,8 +87,8 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self._sps_range = qtgui.Range(1, 100, 1, 32, 200)
         self._sps_win = qtgui.RangeWidget(self._sps_range, self.set_sps, "Samps/Symbol", "counter_slider", int, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._sps_win)
-        self._noise_range_range = qtgui.Range(0, 2000, 1, 0, 200)
-        self._noise_range_win = qtgui.RangeWidget(self._noise_range_range, self.set_noise_range, "Noise", "counter_slider", float, QtCore.Qt.Horizontal)
+        self._noise_range_range = qtgui.Range(-100, 10, 1, -100, 200)
+        self._noise_range_win = qtgui.RangeWidget(self._noise_range_range, self.set_noise_range, "Noise (dB)", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._noise_range_win)
         self._freq_range_range = qtgui.Range(0, 100, 1, 0, 200)
         self._freq_range_win = qtgui.RangeWidget(self._freq_range_range, self.set_freq_range, "Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
@@ -96,7 +96,7 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self._epsilon_range = qtgui.Range(0, 1000, 1, 0, 200)
         self._epsilon_win = qtgui.RangeWidget(self._epsilon_range, self.set_epsilon, "Epsilon", "counter_slider", int, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._epsilon_win)
-        self._delay_blk_range = qtgui.Range(0, 100, 1, 0, 200)
+        self._delay_blk_range = qtgui.Range(0, 100, 1, 10, 200)
         self._delay_blk_win = qtgui.RangeWidget(self._delay_blk_range, self.set_delay_blk, "Delay", "counter_slider", int, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._delay_blk_win)
         self.root_raised_cosine_filter_0 = filter.fir_filter_ccf(
@@ -107,6 +107,57 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
                 (samp_rate/sps),
                 0.35,
                 (11*sps)))
+        self.qtgui_time_sink_x_0_0_0_0_0_2 = qtgui.time_sink_c(
+            1024, #size
+            samp_rate, #samp_rate
+            "Original Signal Combined", #name
+            1, #number of inputs
+            None # parent
+        )
+        self.qtgui_time_sink_x_0_0_0_0_0_2.set_update_time(0.10)
+        self.qtgui_time_sink_x_0_0_0_0_0_2.set_y_axis(-1, 1)
+
+        self.qtgui_time_sink_x_0_0_0_0_0_2.set_y_label('Amplitude', "")
+
+        self.qtgui_time_sink_x_0_0_0_0_0_2.enable_tags(True)
+        self.qtgui_time_sink_x_0_0_0_0_0_2.set_trigger_mode(qtgui.TRIG_MODE_FREE, qtgui.TRIG_SLOPE_POS, 0.0, 0, 0, "")
+        self.qtgui_time_sink_x_0_0_0_0_0_2.enable_autoscale(False)
+        self.qtgui_time_sink_x_0_0_0_0_0_2.enable_grid(False)
+        self.qtgui_time_sink_x_0_0_0_0_0_2.enable_axis_labels(True)
+        self.qtgui_time_sink_x_0_0_0_0_0_2.enable_control_panel(False)
+        self.qtgui_time_sink_x_0_0_0_0_0_2.enable_stem_plot(False)
+
+
+        labels = ['Signal 1', 'Signal 2', 'Signal 3', 'Signal 4', 'Signal 5',
+            'Signal 6', 'Signal 7', 'Signal 8', 'Signal 9', 'Signal 10']
+        widths = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        colors = ['blue', 'red', 'green', 'black', 'cyan',
+            'magenta', 'yellow', 'dark red', 'dark green', 'dark blue']
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0]
+        styles = [1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1]
+        markers = [-1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1]
+
+
+        for i in range(2):
+            if len(labels[i]) == 0:
+                if (i % 2 == 0):
+                    self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_label(i, "Re{{Data {0}}}".format(i/2))
+                else:
+                    self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_label(i, "Im{{Data {0}}}".format(i/2))
+            else:
+                self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_label(i, labels[i])
+            self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_width(i, widths[i])
+            self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_color(i, colors[i])
+            self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_style(i, styles[i])
+            self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_marker(i, markers[i])
+            self.qtgui_time_sink_x_0_0_0_0_0_2.set_line_alpha(i, alphas[i])
+
+        self._qtgui_time_sink_x_0_0_0_0_0_2_win = sip.wrapinstance(self.qtgui_time_sink_x_0_0_0_0_0_2.qwidget(), Qt.QWidget)
+        self.top_layout.addWidget(self._qtgui_time_sink_x_0_0_0_0_0_2_win)
         self.qtgui_time_sink_x_0_0_0_0_0_0 = qtgui.time_sink_c(
             1024, #size
             samp_rate, #samp_rate
@@ -523,14 +574,15 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
             [])
         self.digital_diff_encoder_bb_0 = digital.diff_encoder_bb(order, digital.DIFF_DIFFERENTIAL)
         self.digital_diff_decoder_bb_0 = digital.diff_decoder_bb(order, digital.DIFF_DIFFERENTIAL)
-        self.digital_costas_loop_cc_0_0 = digital.costas_loop_cc(((2*3.141596265359)/100), order, False)
+        self.digital_costas_loop_cc_0_0 = digital.costas_loop_cc(0.01, order, False)
         self.digital_corr_est_cc_0 = digital.corr_est_cc(variable_modulate_vector_0, sps, 1, 0.9, digital.THRESHOLD_ABSOLUTE)
+        self.digital_constellation_encoder_bc_0_2 = digital.constellation_encoder_bc(qpsk_obj)
         self.digital_constellation_encoder_bc_0_1 = digital.constellation_encoder_bc(qpsk_obj)
         self.digital_constellation_encoder_bc_0_0 = digital.constellation_encoder_bc(qpsk_obj)
         self.digital_constellation_encoder_bc_0 = digital.constellation_encoder_bc(qpsk_obj)
         self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(qpsk_obj)
         self.channels_channel_model_0 = channels.channel_model(
-            noise_voltage=(noise_range*10**-3),
+            noise_voltage=(10**(noise_range/10)),
             frequency_offset=(freq_range*10**-6),
             epsilon=(1.0 + epsilon*10**-6),
             taps=[0.72 + 0.10j, 0.33 - 0.18j, 0.11 + 0.45j, 0.05 - 0.02j, 0.02 + 0.01j],
@@ -542,11 +594,13 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self.blocks_throttle2_0_0_1_0 = blocks.throttle( gr.sizeof_float*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0_1 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0_0_1 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
+        self.blocks_throttle2_0_0_0_0_1 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0_0_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_stream_mux_0 = blocks.stream_mux(gr.sizeof_char*1, (8, 8))
+        self.blocks_repeat_0_1_0 = blocks.repeat(gr.sizeof_char*1, sps)
         self.blocks_repeat_0_1 = blocks.repeat(gr.sizeof_char*1, sps)
         self.blocks_repeat_0_0 = blocks.repeat(gr.sizeof_char*1, sps)
         self.blocks_repeat_0 = blocks.repeat(gr.sizeof_char*1, sps)
@@ -574,12 +628,15 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_repeat_0, 0), (self.digital_constellation_encoder_bc_0_1, 0))
         self.connect((self.blocks_repeat_0_0, 0), (self.digital_constellation_encoder_bc_0_0, 0))
         self.connect((self.blocks_repeat_0_1, 0), (self.digital_constellation_encoder_bc_0, 0))
+        self.connect((self.blocks_repeat_0_1_0, 0), (self.digital_constellation_encoder_bc_0_2, 0))
+        self.connect((self.blocks_stream_mux_0, 0), (self.blocks_repeat_0_1_0, 0))
         self.connect((self.blocks_stream_mux_0, 0), (self.digital_diff_encoder_bb_0, 0))
         self.connect((self.blocks_throttle2_0, 0), (self.qtgui_freq_sink_x_0, 0))
         self.connect((self.blocks_throttle2_0_0, 0), (self.qtgui_const_sink_x_0_0_0_0_0_0, 0))
         self.connect((self.blocks_throttle2_0_0_0, 0), (self.qtgui_freq_sink_x_0_0_0, 0))
         self.connect((self.blocks_throttle2_0_0_0_0, 0), (self.qtgui_const_sink_x_0_0_0_0_0, 0))
         self.connect((self.blocks_throttle2_0_0_0_0, 0), (self.qtgui_time_sink_x_0_0_0_0_0, 0))
+        self.connect((self.blocks_throttle2_0_0_0_0_1, 0), (self.qtgui_time_sink_x_0_0_0_0_0_2, 0))
         self.connect((self.blocks_throttle2_0_0_0_1, 0), (self.qtgui_const_sink_x_0_0_0_0, 0))
         self.connect((self.blocks_throttle2_0_0_1, 0), (self.qtgui_time_sink_x_0_0_0_0_0_0, 0))
         self.connect((self.blocks_throttle2_0_0_1_0, 0), (self.qtgui_number_sink_0, 0))
@@ -594,6 +651,7 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self.connect((self.digital_constellation_encoder_bc_0, 0), (self.blocks_throttle2_0_0_0_0, 0))
         self.connect((self.digital_constellation_encoder_bc_0_0, 0), (self.blocks_throttle2_0_0_1, 0))
         self.connect((self.digital_constellation_encoder_bc_0_1, 0), (self.root_raised_cosine_filter_0, 0))
+        self.connect((self.digital_constellation_encoder_bc_0_2, 0), (self.blocks_throttle2_0_0_0_0_1, 0))
         self.connect((self.digital_corr_est_cc_0, 0), (self.digital_constellation_decoder_cb_0, 0))
         self.connect((self.digital_costas_loop_cc_0_0, 0), (self.blocks_throttle2_0_0, 0))
         self.connect((self.digital_costas_loop_cc_0_0, 0), (self.digital_corr_est_cc_0, 0))
@@ -630,6 +688,7 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self.blocks_repeat_0.set_interpolation(self.sps)
         self.blocks_repeat_0_0.set_interpolation(self.sps)
         self.blocks_repeat_0_1.set_interpolation(self.sps)
+        self.blocks_repeat_0_1_0.set_interpolation(self.sps)
         self.digital_symbol_sync_xx_0.set_sps(self.sps)
         self.digital_symbol_sync_xx_0_0.set_sps(self.sps)
         self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), 0.35, (11*self.sps)))
@@ -643,6 +702,7 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self.digital_constellation_encoder_bc_0.set_constellation(self.qpsk_obj)
         self.digital_constellation_encoder_bc_0_0.set_constellation(self.qpsk_obj)
         self.digital_constellation_encoder_bc_0_1.set_constellation(self.qpsk_obj)
+        self.digital_constellation_encoder_bc_0_2.set_constellation(self.qpsk_obj)
 
     def get_peamble(self):
         return self.peamble
@@ -668,6 +728,7 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self.blocks_throttle2_0_0.set_sample_rate(self.samp_rate)
         self.blocks_throttle2_0_0_0.set_sample_rate(self.samp_rate)
         self.blocks_throttle2_0_0_0_0.set_sample_rate(self.samp_rate)
+        self.blocks_throttle2_0_0_0_0_1.set_sample_rate(self.samp_rate)
         self.blocks_throttle2_0_0_0_1.set_sample_rate(self.samp_rate)
         self.blocks_throttle2_0_0_1.set_sample_rate(self.samp_rate)
         self.blocks_throttle2_0_0_1_0.set_sample_rate(self.samp_rate)
@@ -677,6 +738,7 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
         self.qtgui_freq_sink_x_0_0_0_0.set_frequency_range(0, self.samp_rate)
         self.qtgui_time_sink_x_0_0_0_0_0.set_samp_rate(self.samp_rate)
         self.qtgui_time_sink_x_0_0_0_0_0_0.set_samp_rate(self.samp_rate)
+        self.qtgui_time_sink_x_0_0_0_0_0_2.set_samp_rate(self.samp_rate)
         self.root_raised_cosine_filter_0.set_taps(firdes.root_raised_cosine(1, self.samp_rate, (self.samp_rate/self.sps), 0.35, (11*self.sps)))
 
     def get_noise_range(self):
@@ -684,7 +746,7 @@ class qpsk_ber(gr.top_block, Qt.QWidget):
 
     def set_noise_range(self, noise_range):
         self.noise_range = noise_range
-        self.channels_channel_model_0.set_noise_voltage((self.noise_range*10**-3))
+        self.channels_channel_model_0.set_noise_voltage((10**(self.noise_range/10)))
 
     def get_freq_range(self):
         return self.freq_range
