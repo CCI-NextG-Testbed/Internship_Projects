@@ -870,7 +870,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [56, 284.0]
+    coordinate: [64, 284.0]
     rotation: 0
     state: enabled
 
