@@ -66,11 +66,15 @@ class transceiver_test(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.sps = sps = 32
+        self.sps = sps = 4
         self.signal_freq = signal_freq = 1000
         self.samp_rate = samp_rate = 10e6
-        self.gain = gain = 40
-        self.carrier_freq = carrier_freq = 5802
+        self.qpsk_object = qpsk_object = digital.constellation_qpsk().base()
+        self.qpsk_object.set_npwr(1.0)
+        self.order = order = 4
+        self.gain_tx = gain_tx = 20
+        self.gain = gain = 5
+        self.carrier_freq = carrier_freq = 2450
         self.bpsk_object = bpsk_object = digital.constellation_bpsk().base()
         self.bpsk_object.set_npwr(1.0)
 
@@ -78,10 +82,13 @@ class transceiver_test(gr.top_block, Qt.QWidget):
         # Blocks
         ##################################################
 
-        self._gain_range = qtgui.Range(0, 60, 0.1, 40, 200)
-        self._gain_win = qtgui.RangeWidget(self._gain_range, self.set_gain, "CH Gain (dB)", "counter_slider", float, QtCore.Qt.Horizontal)
+        self._gain_tx_range = qtgui.Range(0, 60, 0.1, 20, 200)
+        self._gain_tx_win = qtgui.RangeWidget(self._gain_tx_range, self.set_gain_tx, "TX Gain (dB)", "counter_slider", float, QtCore.Qt.Horizontal)
+        self.top_layout.addWidget(self._gain_tx_win)
+        self._gain_range = qtgui.Range(0, 60, 0.1, 5, 200)
+        self._gain_win = qtgui.RangeWidget(self._gain_range, self.set_gain, "RX Gain (dB)", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._gain_win)
-        self._carrier_freq_range = qtgui.Range(5725, 5875, 0.1, 5802, 200)
+        self._carrier_freq_range = qtgui.Range(2000, 5875, 0.1, 2450, 200)
         self._carrier_freq_win = qtgui.RangeWidget(self._carrier_freq_range, self.set_carrier_freq, "Carrier Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._carrier_freq_win)
         self.uhd_usrp_source_0 = uhd.usrp_source(
@@ -112,7 +119,7 @@ class transceiver_test(gr.top_block, Qt.QWidget):
 
         self.uhd_usrp_sink_0.set_center_freq(carrier_freq*10**6, 0)
         self.uhd_usrp_sink_0.set_antenna("TX/RX", 0)
-        self.uhd_usrp_sink_0.set_gain(20, 0)
+        self.uhd_usrp_sink_0.set_gain(gain_tx, 0)
         self._signal_freq_range = qtgui.Range(0, 100000, 100, 1000, 200)
         self._signal_freq_win = qtgui.RangeWidget(self._signal_freq_range, self.set_signal_freq, "Signal Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._signal_freq_win)
@@ -193,8 +200,8 @@ class transceiver_test(gr.top_block, Qt.QWidget):
         self.digital_symbol_sync_xx_0 = digital.symbol_sync_cc(
             digital.TED_GARDNER,
             sps,
-            0.045,
-            1.0,
+            0.08,
+            1,
             1.0,
             1.5,
             1,
@@ -202,13 +209,13 @@ class transceiver_test(gr.top_block, Qt.QWidget):
             digital.IR_MMSE_8TAP,
             128,
             [])
-        self.digital_fll_band_edge_cc_0 = digital.fll_band_edge_cc(sps, 1, 1, ((2*3.141596265359)/100))
-        self.digital_diff_encoder_bb_0 = digital.diff_encoder_bb(2, digital.DIFF_DIFFERENTIAL)
-        self.digital_diff_decoder_bb_0 = digital.diff_decoder_bb(2, digital.DIFF_DIFFERENTIAL)
-        self.digital_costas_loop_cc_0 = digital.costas_loop_cc(((2*3.141596265359)/100), 2, False)
-        self.digital_constellation_encoder_bc_0_1 = digital.constellation_encoder_bc(bpsk_object)
-        self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(bpsk_object)
-        self.blocks_vector_source_x_0 = blocks.vector_source_b((1, 0, 0, 1, 0, 1, 0), True, 1, [])
+        self.digital_fll_band_edge_cc_0 = digital.fll_band_edge_cc(sps, 0.35, 64, ((2*3.141596265359)/100))
+        self.digital_diff_encoder_bb_0 = digital.diff_encoder_bb(order, digital.DIFF_DIFFERENTIAL)
+        self.digital_diff_decoder_bb_0 = digital.diff_decoder_bb(order, digital.DIFF_DIFFERENTIAL)
+        self.digital_costas_loop_cc_0 = digital.costas_loop_cc(((2*3.141596265359)/100), order, False)
+        self.digital_constellation_encoder_bc_0_1 = digital.constellation_encoder_bc(qpsk_object)
+        self.digital_constellation_decoder_cb_0 = digital.constellation_decoder_cb(qpsk_object)
+        self.blocks_vector_source_x_0 = blocks.vector_source_b((0, 1, 2, 3), True, 1, [])
         self.blocks_repeat_0_0 = blocks.repeat(gr.sizeof_char*1, sps)
         self.blocks_repeat_0 = blocks.repeat(gr.sizeof_char*1, sps)
         self.blocks_char_to_float_0 = blocks.char_to_float(1, 1)
@@ -270,6 +277,27 @@ class transceiver_test(gr.top_block, Qt.QWidget):
         self.uhd_usrp_sink_0.set_samp_rate(self.samp_rate)
         self.uhd_usrp_source_0.set_samp_rate(self.samp_rate)
 
+    def get_qpsk_object(self):
+        return self.qpsk_object
+
+    def set_qpsk_object(self, qpsk_object):
+        self.qpsk_object = qpsk_object
+        self.digital_constellation_decoder_cb_0.set_constellation(self.qpsk_object)
+        self.digital_constellation_encoder_bc_0_1.set_constellation(self.qpsk_object)
+
+    def get_order(self):
+        return self.order
+
+    def set_order(self, order):
+        self.order = order
+
+    def get_gain_tx(self):
+        return self.gain_tx
+
+    def set_gain_tx(self, gain_tx):
+        self.gain_tx = gain_tx
+        self.uhd_usrp_sink_0.set_gain(self.gain_tx, 0)
+
     def get_gain(self):
         return self.gain
 
@@ -291,8 +319,6 @@ class transceiver_test(gr.top_block, Qt.QWidget):
 
     def set_bpsk_object(self, bpsk_object):
         self.bpsk_object = bpsk_object
-        self.digital_constellation_decoder_cb_0.set_constellation(self.bpsk_object)
-        self.digital_constellation_encoder_bc_0_1.set_constellation(self.bpsk_object)
 
 
 
