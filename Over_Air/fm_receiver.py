@@ -67,13 +67,13 @@ class fm_receiver(gr.top_block, Qt.QWidget):
         ##################################################
         self.samp_rate = samp_rate = 2e6
         self.variable_low_pass_filter_taps_0 = variable_low_pass_filter_taps_0 = firdes.low_pass(1.0, samp_rate, 100e3,10e3, window.WIN_HAMMING, 6.76)
-        self.freq = freq = 90.9*10**6
+        self.freq = freq = 2.5e9
 
         ##################################################
         # Blocks
         ##################################################
 
-        self._freq_range = qtgui.Range(87.9*10**6, 107.9*10**6, 200000, 90.9*10**6, 200)
+        self._freq_range = qtgui.Range(87.9*10**6, 3e9, 200000, 2.5e9, 200)
         self._freq_win = qtgui.RangeWidget(self._freq_range, self.set_freq, "Frequency", "counter_slider", float, QtCore.Qt.Horizontal)
         self.top_layout.addWidget(self._freq_win)
         self.uhd_usrp_source_0 = uhd.usrp_source(

@@ -44,8 +44,8 @@ blocks:
     rangeType: float
     start: 87.9*10**6
     step: '200000'
-    stop: 107.9*10**6
-    value: 90.9*10**6
+    stop: 3e9
+    value: 2.5e9
     widget: counter_slider
   states:
     bus_sink: false
